@@ -1,0 +1,112 @@
+<?php
+
+/*
+ * @author paul.huntsberger@gmail.com
+ * @file addthis.module
+ */
+
+define('ADDTHIS_MODULE_PATH', drupal_get_path('module', 'addthis'));
+define('ADDTHIS_PUBID', variable_get('addthis_pubid', null));
+define('ADDTHIS_ASYNC', variable_get('addthis_async', null));
+
+/**
+ * Implements Hook Menu
+ */
+function addthis_menu() {
+  $items = array();
+  //Admin Page
+  $items['admin/config/services/addthis'] = array(
+    'title' => 'Add This',
+    'description' => 'A simple module that allows you to add the "Add This" scripts to your site.',
+    'page callback' => 'addthis_admin',
+    'access arguments' => array('administer content types'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'includes/addthis.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements Hook Theme
+ */
+function addthis_theme() {
+  $themes = array();
+  $themes['addthis_admin_form'] = array(
+    'render element' => 'form',
+    'template' => 'templates/form-admin',
+  );
+  return $themes;
+}
+
+/**
+ * Implements hook_library
+ */
+function addthis_library() {
+  $libraries = array();
+  //Normal Widget.
+  $libraries['addthis_widget'] = array(
+    'title' => 'Add This',
+    'website' => 'http://www.addthis.com',
+    'version' => '1.0',
+    'js' => array(
+      //Add This main script
+      '//s7.addthis.com/js/300/addthis_widget.js#pubid=' . ADDTHIS_PUBID => array(
+        'scope' => 'footer',
+        'weight' => -20,
+        'group' => JS_LIBRARY,
+        'type' => 'external'
+      ),
+    ),
+  );
+  //Add this async widget.
+  $libraries['addthis_widget_async'] = array(
+    'title' => 'Add This Async',
+    'website' => 'http://www.addthis.com',
+    'version' => '1.0',
+    'js' => array(
+      //Add this config.
+      array(
+        'scope' => 'footer',
+        'weight' => -21,
+        'group' => JS_LIBRARY,
+        'type' => 'inline',
+        'data' => 'var addthis_config = addthis_config || {};',
+      ),
+      //Add This main script
+      '//s7.addthis.com/js/300/addthis_widget.js#async=1' => array(
+        'scope' => 'footer',
+        'weight' => -20,
+        'group' => JS_LIBRARY,
+        'type' => 'external'
+      ),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook preprocess
+ *  We implicitely remove admin and user sections from add this.
+ * @param type $variables
+ */
+function addthis_preprocess(&$variables) {
+  $path = drupal_get_path_alias();
+  $paths = array('admin*', 'user*');
+  $disallowed = variable_get('addthis_disallowed', null);
+  if (!empty($disallowed)) {
+    $disallowed = explode("\n", $disallowed);
+    foreach ($disallowed as $value) {
+      $paths[] = $value;
+    }
+  }
+  $patterns = implode("\n", $paths);
+  if (!drupal_match_path($path, $patterns)) {
+    $async = ADDTHIS_ASYNC;
+    if (!empty($async)) {
+      drupal_add_js(array('addThis' => array('pubId' => ADDTHIS_PUBID)), 'setting');
+      drupal_add_library('addthis', 'addthis_widget_async');
+    } else {
+      drupal_add_library('addthis', 'addthis_widget');
+    }
+  }
+}

@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file addthis.install
+ *  Runtime notification for add this publish id.
+ */
+
+function addthis_requirements($phase) {
+  $requriements = array();
+  $t = get_t();
+  switch ($phase) {
+    case 'runtime':
+      //Runtime Configuration.
+      $severity = REQUIREMENT_OK;
+      $description = $t('Add this is installed correctly.');
+      $pubid = variable_get('addthis_pubid', null);
+      if (empty($pubid)) {
+        $msg = array(
+          '@url' => url('admin/config/services/addthis')
+        );
+        $description = $t('You have not added your publisher id from your add this account <a hre="@url">configure</a>.', $msg);
+        $severity = REQUIREMENT_WARNING;
+      }
+      $requirements['addthis_pubid'] = array(
+        'title' => $t('Add This Publisher ID'),
+        'description' => $description,
+        'severity' => $severity,
+      );
+      break;
+  }
+  return $requirements;
+}

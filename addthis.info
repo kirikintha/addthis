@@ -1,0 +1,6 @@
+name = Add This
+description = Allows you to simply put add this scripts into your site.
+core = 7.x
+package = Add This
+project = addthis
+version = 7.x-1.0
