@@ -30,12 +30,23 @@ function addthis_menu() {
  * Implements Hook Theme
  */
 function addthis_theme() {
-  $themes = array();
-  $themes['addthis_admin_form'] = array(
-    'render element' => 'form',
-    'template' => 'templates/form-admin',
+  $theme = array(
+    //Widget.
+    'addthis_widget' => array(
+      'template' => 'templates/addthis.widget',
+      'addthis' => array(
+        'classes' => 'addthis_toolbox addthis_default_style addthis_32x32_style',
+        //explode buttons, by space.
+        'buttons' => 'addthis_button_preferred_1 addthis_button_preferred_2 addthis_button_preferred_3 addthis_button_preferred_4',
+      ),
+    ),
+    //Admin Form.
+    'addthis_admin_form' => array(
+      'render element' => 'form',
+      'template' => 'templates/form.admin',
+    )
   );
-  return $themes;
+  return $theme;
 }
 
 /**
@@ -81,6 +92,23 @@ function addthis_library() {
       ),
     ),
   );
+  //When adding the template, add the main script, as on it's own it needs the async.
+  $libraries['addthis_widget_main'] = array(
+    'title' => 'Add This Main (Force Async)',
+    'website' => 'http://www.addthis.com',
+    'version' => '1.0',
+    'js' => array(
+      //Add The social links builder.
+      ADDTHIS_MODULE_PATH . '/js/addthis-main.js' => array(
+        'scope' => 'footer',
+        'weight' => -19,
+        'group' => JS_DEFAULT,
+      ),
+      'dependencies' => array(
+        array('addthis_widget_async'),
+      ),
+    ),
+  );
   return $libraries;
 }
 
@@ -109,4 +137,41 @@ function addthis_preprocess(&$variables) {
       drupal_add_library('addthis', 'addthis_widget');
     }
   }
+}
+
+/**
+ * Preprocess Add This Widget
+ */
+function addthis_preprocess_addthis_widget(&$variables) {
+  //Look for the widget and buttons, and explode them into an array.
+  if (isset($variables['addthis']) && !empty($variables['addthis']['buttons'])) {
+    //Add the Main Library.
+    $extras = array();
+    //@TODO - this may have to be validated.
+    if (!empty($variables['addthis']['image_include'])) {
+      $extras['image_include'] = $variables['addthis']['image_include'];
+    }
+    if (!empty($variables['addthis']['image_exclude'])) {
+      $extras['image_exclude'] = $variables['addthis']['image_exclude'];
+    }
+    if (!empty($variables['addthis']['image_container'])) {
+      $extras['image_container'] = $variables['addthis']['image_container'];
+    }
+    if (!empty($extras)) {
+      drupal_add_js(array('addThis' => $extras), 'setting');
+    }
+    drupal_add_library('addthis', 'addthis_widget_main');
+    //Make the buttons into an array we can process with the template.
+    $variables['addthis']['buttons'] = explode(' ', $variables['addthis']['buttons']);
+  }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function addthis_views_api() {
+  return array(
+    'api' => 3,
+    'path' => ADDTHIS_MODULE_PATH . '/views',
+  );
 }

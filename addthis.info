@@ -3,4 +3,9 @@ description = Allows you to simply put add this scripts into your site.
 core = 7.x
 package = Add This
 project = addthis
-version = 7.x-1.0
+version = 7.x-1.1
+
+dependencies[] = ctools
+
+; Views Handlers
+files[] = views/addthis_handler_field_addthis_widget.inc

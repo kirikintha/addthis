@@ -6,7 +6,7 @@
  */
 
 function addthis_requirements($phase) {
-  $requriements = array();
+  $requirements = array();
   $t = get_t();
   switch ($phase) {
     case 'runtime':
